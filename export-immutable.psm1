@@ -1,4 +1,28 @@
-function export-immutable {
+<#
+.SYNOPSIS
+    Exports and Imports the Immutable ID on AD Objects
+    Exports the Immutable ID to a .csv File
+    and Imports it on CloudOnly Azure AD Users
+.DESCRIPTION
+    Exports and Imports the Immutable ID on AD Objects
+        Exports the Immutable ID to a .csv File
+    and Imports it on CloudOnly Azure AD Users
+.OUTPUTS
+    Nothing but magic
+.EXAMPLE
+    .\Export-Immutable -OU "OU=Contoso-Groups,DC=Contoso,DC=local" -Path C:\temp\export.csv
+    .\Set-Immutable -Path C:\temp\export.csv
+.NOTES
+    Author:            Sebastian Wild	
+    Email: 			   sebastian.wild@dynabcs.at
+    Company:           DynaBCS Informatik
+	Date : 			   30.03.2021
+
+    Changelog:
+		1.0             Initial Release
+#>
+
+function Export-Immutable {
     [CmdletBinding()]
     param (
         [string]$OU,
@@ -62,7 +86,7 @@ function export-immutable {
 }
 
 
-function set-immutable {
+function Set-Immutable {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, HelpMessage = "Input the Fullpath to the CSV File, include the File Extension!")]
