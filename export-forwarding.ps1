@@ -14,9 +14,9 @@ Foreach ($user in $users) {
     $myexforwardingaddress = (Get-Mailbox $myexmailbox.ForwardingAddress).PrimarySmtpAddress.ToString()
     $myexforwardingname = (Get-Mailbox $myexmailbox.ForwardingAddress).Name.ToString()
     $myexitemsconf = Get-MailboxSentItemsConfiguration $myexupn
-           
+
     $ForwardObject = New-Object PSObject -Property @{    
-           
+
         Mailbox                   = $myexupn
         Forwarder                 = $myexforwardingaddress
         ForwarderName             = $myexforwardingname
@@ -25,17 +25,16 @@ Foreach ($user in $users) {
         GrantSendOnBehalf         = $myexsendonbehalfaddress
     }
     $ForwardExport += $ForwardObject
-                     
+
     If ($myexforwardingaddress -like "*@*") {
         Write-Host "Mailforwarder $myexforwardingaddress auf $myexupn in CSV exportiert" -ForegroundColor Green 
     } 
 					
     Else {}
-                                       
+
     Clear-Variable myex*
                                                             
 }
                                             
-# Mailforwarding in CSV Exportieren                     
-                               
+# Mailforwarding in CSV Exportieren                                           
 $ForwardExport | Export-Csv ".\Forwarding1.csv" -NoTypeInformation
