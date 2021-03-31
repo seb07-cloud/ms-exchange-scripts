@@ -33,4 +33,4 @@ foreach ($user in (Get-ADGroupMember -Identity "DYNA_Teams-PhoneUsers")){
         }
     }
 
-$CSVExport |select-object "eMail","phoneNumber" | Export-CSV "C:\pccfg\ADExport\success\$filename" -NoTypeInformation -Encoding UTF8
+$CSVExport |select-object "eMail","phoneNumber" | Export-CSV "C:\pccfg\ADExport\success\${$filename}" -NoTypeInformation -Encoding UTF8
