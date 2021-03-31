@@ -21,8 +21,9 @@
 function Edit-MailboxPermission {
     [CmdletBinding()]
     param (
-        [switch]$Exchange,
-        [switch]$ExchangeOnline
+        [ValidateSet("ExchangeOnline", "Exchange")]
+        [Parameter(Mandatory)]
+        [string]$ExchangeType
     )
     
     begin {
@@ -33,20 +34,20 @@ function Edit-MailboxPermission {
         $permissions.Add("Reviewer") | Out-Null
         $permissions.Add("Author") | Out-Null
 
-        if ($Exchange) {
+        if ($ExchangeType -eq "Exchange") {
             Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn; 
-            sleep 5
+            Start-Sleep 5
             $mailboxes = Get-Mailbox | Where-Object { $_.RecipientType -eq "UserMailbox" } | Sort-Object Name
         }
 
-        elseif ($ExchangeOnline) {
+        elseif ($ExchangeType = "ExchangeOnline") {
             #Requires -Module MSOnline
             $cred = Get-Credential
             Import-Module MSOnline
             Connect-MsolService -Credential $cred
             $s = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.outlook.com/powershell -Credential $cred -Authentication Basic -AllowRedirection
-            $importresult s = Import-PSSession $s -AllowClobber
-            sleep 5
+            $importresults = Import-PSSession $s -AllowClobber
+            Start-Sleep 5
             $mailboxes = Get-Mailbox | Where-Object { $_.RecipientType -eq "UserMailbox" } | Sort-Object Name
         }
 
