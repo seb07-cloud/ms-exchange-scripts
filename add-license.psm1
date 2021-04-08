@@ -48,6 +48,7 @@ function Add-O365License {
         }
         catch {
             Write-Host "Could assign license" $license.AccountSkuId "to" $user.UserPrincipalName
+            Write-Host $_
         }
     }
     
