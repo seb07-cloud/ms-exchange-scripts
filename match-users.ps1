@@ -13,3 +13,16 @@ foreach ($user in $users){
         Write-Host "'$($user.UserPrincipalName)' not found in AD" -ForegroundColor Red
     }
 }
+
+
+foreach ($user in $users){
+
+    try {
+        if (Get-Mailbox -Identity '$($user.UserPrincipalName)'){
+            Write-Host "'$($user.UserPrincipalName)' has a Mailbox" -ForegroundColor Green
+        }
+    }
+    catch {
+        Write-Host "'$($user.UserPrincipalName)' has no Mailbox" -ForegroundColor Red
+    }
+}
