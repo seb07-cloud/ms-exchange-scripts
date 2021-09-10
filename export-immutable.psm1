@@ -28,7 +28,7 @@ function Export-Immutable {
         [string]$OU,
         [string]$Group,
         [Parameter(Mandatory, HelpMessage = "Input the Fullpath to the CSV File, include the File Extension!")]
-        [System.IO.Path]$path
+        [String]$path
     )
 
     begin {
@@ -56,7 +56,7 @@ function Export-Immutable {
             $CSVExport | Export-Csv -Path $path-NoTypeInformation
         }
         elseif ($Group -ne " ") {
-            foreach ($user in (Get-AdGroupMember -identity )) {
+            foreach ($user in (Get-AdGroupMember -identity $Group)) {
 
                 $guid = (Get-ADUser $user).Objectguid
                 $immutableID = [system.convert]::ToBase64String($guid.tobytearray())
@@ -66,7 +66,7 @@ function Export-Immutable {
                 $myimmu = $immutableID
             
             
-                $CSVUser = New-Object PSObject -Property @{  
+                $CSVUser = New-Object -TypeName PSCustomObject -Property @{
             
                     Userprincipalname = $myupn
                     Emailaddress      = $mymail
@@ -75,7 +75,7 @@ function Export-Immutable {
                 $CSVExport += $CSVUser
                 Clear-Variable myex*
         
-                $CSVExport | Export-Csv -Path $path-NoTypeInformation
+                $CSVExport | Export-Csv -Path $path -NoTypeInformation
             }
         }
         else {
@@ -90,7 +90,7 @@ function Set-Immutable {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, HelpMessage = "Input the Fullpath to the CSV File, include the File Extension!")]
-        [System.IO.Path]$path
+        [string]$path
     )
     begin {}
     process {
