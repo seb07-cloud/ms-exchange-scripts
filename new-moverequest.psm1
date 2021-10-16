@@ -30,13 +30,17 @@ function New-O365MoveRequest {
 		Import-Module ActiveDirectory
 		Import-Module MSOnline
 		try {
-			$cred = Get-StoredCredential -target O365
-			$opcred = Get-StoredCredential -target AD
+
+			$opensession = if (!(Get-PSSession -Name "ExchangeOnline*")) {
+
+				$cred = Get-StoredCredential -target O365
+				$opcred = Get-StoredCredential -target AD
 	
 			
-			Connect-MsolService -Credential $cred
-			$s = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.outlook.com/powershell -Credential $cred -Authentication Basic -AllowRedirection
-			$importresults = Import-PSSession $s -AllowClobber
+				Connect-MsolService -Credential $cred
+				$s = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.outlook.com/powershell -Credential $cred -Authentication Basic -AllowRedirection
+				$importresults = Import-PSSession $s -AllowClobber
+			}
 		}
 		catch {
 			Write-Host $_
@@ -46,32 +50,44 @@ function New-O365MoveRequest {
 	process {
 		try {
 			$endpoint = Get-MigrationEndPoint
+			$mailboxes = Get-Mailbox | Select-Object UserPrincipalName
 
 			if ($Group) {
-				$users = Get-ADGroupMember -Identity gr_O365-Sync | Where-Object { $_.SamAccountName -ne "ÖffentlicherOrdner" } | ForEach-Object { Get-ADUser $_.SamAccountName | Select-Object userPrincipalName }
+				$users = Get-ADGroupMember -Identity $Group | Select-Object SamAccountName, objectClass | Where-Object { ( $_.SamAccountName -ne "ÖffentlicherOrdner" ) -and ( $_.SamAccountName -notlike "admin*" ) -and ( $_.SamAccountName -notlike "Mailbox*" ) -and ( $_.objectClass -eq "user" ) } | ForEach-Object { Get-ADUser $_.SamAccountName | Select-Object userPrincipalName }
 
 				Foreach ($user in $users) {
-					New-MoveRequest -Erroraction Stop -Identity $user.userPrincipalName -Remote -RemoteHostName $endpoint.RemoteServer -TargetDeliveryDomain 'hlbv365.mail.onmicrosoft.com' -RemoteCredential $opcred -SuspendWhenReadyToComplete:$true | Out-Null
-					Write-Host 'MoveRequest für ' $user ' erstellt' -ForeGroundColor Green
+					if ($user -notin $mailboxes.UserPrincipalName) {
+						New-MoveRequest -Erroraction Stop -Identity $user.userPrincipalName -Remote -RemoteHostName $endpoint.RemoteServer -TargetDeliveryDomain 'hlbv365.mail.onmicrosoft.com' -RemoteCredential $opcred -SuspendWhenReadyToComplete:$true | Out-Null
+						Write-Host 'MoveRequest für ' $user ' erstellt' -ForeGroundColor Green
+					}
+					else { Write-Host "Mailbox for User $user already exists !" -ForeGroundColor Red }
 				}
 			}
 			else {
 				$users = Get-ADUser -SearchBase $ou -Properties mail -Filter { mail -like '*' } | `Select-Object Name, UserPrincipalName, Mail 
 
 				Foreach ($user in $users) {
-					New-MoveRequest -Erroraction Stop -Identity $user.userPrincipalName -Remote -RemoteHostName $endpoint.RemoteServer -TargetDeliveryDomain 'hlbv365.mail.onmicrosoft.com' -RemoteCredential $opcred -SuspendWhenReadyToComplete:$true | Out-Null
-					Write-Host 'MoveRequest für ' $user ' erstellt' -ForeGroundColor Green
+					if ($user -notin $mailboxes.UserPrincipalName) {
+						New-MoveRequest -Erroraction Stop -Identity $user.userPrincipalName -Remote -RemoteHostName $endpoint.RemoteServer -TargetDeliveryDomain 'hlbv365.mail.onmicrosoft.com' -RemoteCredential $opcred -SuspendWhenReadyToComplete:$true | Out-Null
+						Write-Host 'MoveRequest für ' $user ' erstellt' -ForeGroundColor Green
+					}
+					else { Write-Host "Mailbox for User $user already exists !" -ForeGroundColor Red }
 				}
 			}
 		}
+
 		catch {
 			Write-Host 'Fehler bei ' $user -ForeGroundColor Red
 			Write-Host $_
 		}
+	}
 
-		end {
+	end {
+		$confirm = Read-Host "Wollen sie die Exchange Online Session trennen? [y/n]"
+		if ($confirm -eq 'y') {
 			Get-PSSession $importresults | Remove-PSSession
 		}
+		else { exit }
 	}
 }
 
