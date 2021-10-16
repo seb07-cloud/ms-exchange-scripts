@@ -23,7 +23,8 @@ function New-O365MoveRequest {
 	[CmdletBinding()]
 	param (
 		[string]$Group,
-		[string]$OU
+		[string]$OU,
+		[string]
 	)
 	
 	begin {
